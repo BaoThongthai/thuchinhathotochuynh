@@ -2,73 +2,73 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Sổ Thu Chi Nhà Thờ Tộc (Bảo Mật)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sổ Thu Chi Nhà Thờ Tộc - Bản Hoàn Thiện</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Thêm thư viện icon cho chiếc bút -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
-<body class="bg-gray-100 p-4 md:p-8">
-    <div class="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+<body class="bg-gray-100 p-2 md:p-8">
+    <div id="capture-area" class="max-w-6xl mx-auto bg-white p-4 rounded-lg shadow-xl border-t-4 border-emerald-600">
+        <!-- Header -->
         <div class="flex justify-between items-center mb-6 border-b pb-4">
-            <h1 class="text-2xl font-bold text-emerald-800 uppercase">Sổ Thu Chi Nhà Thờ Tộc</h1>
-            <button id="loginBtn" onclick="toggleLogin()" class="bg-gray-800 text-white px-4 py-2 rounded font-bold hover:bg-gray-900 transition">🔒 Đăng nhập</button>
+            <h1 class="text-xl font-bold text-emerald-800 uppercase">Sổ Thu Chi Nhà Thờ Tộc</h1>
+            <button id="loginBtn" onclick="toggleLogin()" class="bg-gray-800 text-white px-4 py-2 rounded text-xs font-bold no-print">🔒 Đăng nhập</button>
         </div>
 
-        <div id="adminSection" class="bg-emerald-50 p-4 rounded-lg mb-6 shadow-inner hidden border-2 border-emerald-500">
-            <h2 id="formTitle" class="font-bold text-emerald-700 mb-3">Thêm Giao Dịch Mới</h2>
+        <!-- Form Nhập Liệu -->
+        <div id="adminSection" class="bg-emerald-50 p-4 rounded-lg mb-6 hidden shadow-inner no-print border border-emerald-200">
+            <h2 id="formTitle" class="font-bold text-emerald-700 mb-3 uppercase text-sm">Thêm Giao Dịch Mới</h2>
             <input type="hidden" id="editRowId" value="">
             <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
-                <input type="date" id="date" class="p-2 border rounded">
-                <input type="text" id="content" placeholder="Nội dung" class="p-2 border rounded col-span-2">
-                <input type="text" id="person" placeholder="Người thực hiện" class="p-2 border rounded">
-                <input type="number" id="amount" placeholder="Số tiền" class="p-2 border rounded">
-                <select id="type" class="p-2 border rounded bg-white">
+                <input type="date" id="date" class="p-3 border rounded w-full">
+                <input type="text" id="content" placeholder="Nội dung" class="p-3 border rounded w-full md:col-span-2">
+                <input type="text" id="person" placeholder="Người thực hiện" class="p-3 border rounded w-full">
+                <input type="number" id="amount" placeholder="Số tiền" class="p-3 border rounded w-full font-bold">
+                <select id="type" class="p-3 border rounded bg-white w-full font-bold">
                     <option value="thu">Thu (+)</option>
-                    <option value="chi">Chi (-)</option>
+                    <option value="chi" selected>Chi (-)</option>
                 </select>
             </div>
-            <div class="mt-4 flex gap-2">
-                <button onclick="saveData()" class="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 font-bold">Lưu Dữ Liệu</button>
-                <button onclick="resetForm()" id="cancelBtn" class="bg-gray-400 text-white px-6 py-2 rounded hidden">Hủy Sửa</button>
+            <div class="flex gap-2 mt-4">
+                <button onclick="saveData()" class="bg-emerald-600 text-white flex-1 py-3 rounded font-bold shadow hover:bg-emerald-700 transition">LƯU DỮ LIỆU</button>
+                <button id="cancelBtn" onclick="resetForm()" class="bg-gray-400 text-white px-6 py-3 rounded font-bold hidden">HỦY</button>
             </div>
         </div>
 
-        <div class="flex justify-between items-center mb-4">
-            <div class="flex gap-2">
-                <button onclick="fetchData()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow">🔄 Tải lại dữ liệu</button>
+        <!-- Toolbar -->
+        <div class="flex justify-between items-center mb-6 gap-2">
+            <div class="flex gap-1 no-print">
+                <button onclick="fetchData()" class="bg-blue-600 text-white p-3 rounded shadow"><i class="fas fa-sync"></i></button>
+                <button onclick="exportToPDF()" class="bg-red-600 text-white p-3 rounded shadow"><i class="fas fa-file-pdf"></i></button>
             </div>
-            
-            <!-- Ô TIỀN QUỸ (Lấy từ L1) -->
-            <div id="fundDisplay" class="border-2 border-red-500 bg-red-50 px-4 py-2 rounded-lg flex items-center shadow-sm">
-                <span class="text-red-700 font-bold mr-2">Tiền quỹ:</span>
-                <span id="fundAmount" class="text-red-800 font-extrabold text-lg">0 VNĐ</span>
-                <button id="editFundBtn" onclick="updateFundOnSheet()" class="ml-3 text-gray-400 hover:text-red-600 hidden transition">
-                    <i class="fas fa-pencil-alt"></i>
-                </button>
+            <div class="border-2 border-red-500 bg-red-50 px-4 py-2 rounded-lg flex items-center grow md:grow-0 justify-between">
+                <span class="text-red-700 font-bold mr-2 text-sm">Tiền quỹ:</span>
+                <span id="fundAmount" class="text-red-800 font-black text-lg">0</span>
+                <button id="editFundBtn" onclick="updateFundOnSheet()" class="ml-3 text-gray-400 hidden no-print"><i class="fas fa-pen"></i></button>
             </div>
         </div>
 
-        <div id="loading" class="text-blue-600 font-bold hidden animate-pulse mb-4">Đang xử lý...</div>
-
+        <!-- Bảng Dữ Liệu -->
         <div class="overflow-x-auto">
-            <table class="w-full border-collapse border bg-white text-sm">
+            <table class="w-full text-[11px] md:text-sm border-collapse">
                 <thead>
-                    <tr class="bg-emerald-600 text-white uppercase">
-                        <th class="border p-3 text-left">Ngày</th>
-                        <th class="border p-3 text-left">Nội dung</th>
-                        <th class="border p-3 text-left">Người thực hiện</th>
-                        <th class="border p-3 text-right">Thu</th>
-                        <th class="border p-3 text-right">Chi</th>
-                        <th class="border p-3 text-right">Số Dư</th>
-                        <th id="thAdmin" class="border p-3 text-center hidden">Thao tác</th>
+                    <tr class="bg-emerald-700 text-white uppercase">
+                        <th class="p-2 border">Ngày</th>
+                        <th class="p-2 border">Nội dung</th>
+                        <th class="p-2 border">Người</th>
+                        <th class="p-2 border text-right">Thu</th>
+                        <th class="p-2 border text-right">Chi</th>
+                        <th class="p-2 border text-right">Số Dư</th>
+                        <th id="thAdmin" class="p-2 border hidden no-print">Thao tác</th>
                     </tr>
                 </thead>
-                <tbody id="data-table"></tbody>
+                <tbody id="data-table" class="bg-white"></tbody>
                 <tfoot>
-                    <tr class="bg-gray-100 font-bold text-lg">
-                        <td colspan="5" class="p-3 text-right text-emerald-800">TỔNG SỐ DƯ:</td>
-                        <td id="totalBalance" class="p-3 text-right text-emerald-700">0</td>
-                        <td id="tfAdmin" class="hidden"></td>
+                    <tr class="bg-gray-100 font-black border-t-2 border-emerald-800">
+                        <td colspan="5" class="p-3 text-right">TỔNG SỐ DƯ:</td>
+                        <td id="totalBalance" class="p-3 text-right text-emerald-800">0</td>
+                        <td id="tfAdmin" class="hidden no-print"></td>
                     </tr>
                 </tfoot>
             </table>
@@ -76,137 +76,141 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzQpS42mf6cnqXlZszb0S_qZLgDcIgIcCqq-QUlPfhKTNHghKC5PDUzW7Pt0Xn_07S6/exec";
-        let isAdmin = false;
-        let serverFund = 0; // Biến lưu tiền quỹ từ L1
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzLY7JEC0-bMT67e_WOQcmzXn0ZmNkwLdtYct9VY9yPtCgU1kj-Lu_ZNCboRJMBhpaE/exec";
+        let isAdmin = false; let serverFund = 0; let localData = [];
 
         function toggleLogin() {
             if (isAdmin) {
                 isAdmin = false;
                 document.getElementById('loginBtn').innerText = "🔒 Đăng nhập";
                 document.getElementById('adminSection').classList.add('hidden');
-                document.getElementById('editFundBtn').classList.add('hidden'); // Ẩn bút
+                document.getElementById('editFundBtn').classList.add('hidden');
                 document.querySelectorAll('[id$="Admin"]').forEach(el => el.classList.add('hidden'));
             } else {
                 if (prompt("Mật khẩu quản trị:") === "11111") {
                     isAdmin = true;
                     document.getElementById('loginBtn').innerText = "🔓 Đăng xuất";
                     document.getElementById('adminSection').classList.remove('hidden');
-                    document.getElementById('editFundBtn').classList.remove('hidden'); // Hiện bút
+                    document.getElementById('editFundBtn').classList.remove('hidden');
                     document.querySelectorAll('[id$="Admin"]').forEach(el => el.classList.remove('hidden'));
                 }
             }
             renderTable();
         }
 
-        // Chỉnh sửa tiền quỹ trực tiếp lên ô L1
-        async function updateFundOnSheet() {
-            if (!isAdmin) return;
-            const newAmount = prompt("Nhập số tiền quỹ mới (Ô L1):", serverFund);
-            if (newAmount !== null && !isNaN(newAmount)) {
-                setLoading(true);
-                await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({ action: "updateFund", amount: parseFloat(newAmount) })
-                });
-                alert("Đã gửi yêu cầu cập nhật Tiền quỹ!");
-                setTimeout(fetchData, 2000);
-            }
-        }
-
         async function fetchData() {
-            setLoading(true);
             try {
                 const res = await fetch(WEB_APP_URL);
                 const data = await res.json();
-                window.globalData = data.transactions;
-                serverFund = parseFloat(data.fund) || 0; // Gán tiền quỹ từ server
+                localData = data.transactions;
+                serverFund = parseFloat(data.fund) || 0;
                 renderTable();
-            } catch (e) { alert("Lỗi kết nối dữ liệu!"); }
-            setLoading(false);
+            } catch (e) { alert("Lỗi tải dữ liệu!"); }
         }
 
         function renderTable() {
-            let html = ''; 
-            let balance = serverFund; // Bắt đầu tính số dư từ Tiền quỹ (L1)
-            
+            let html = ''; let balance = serverFund;
             document.getElementById('fundAmount').innerText = serverFund.toLocaleString() + " VNĐ";
-
-            (window.globalData || []).forEach(item => {
+            localData.forEach((item, index) => {
                 const thu = parseFloat(item["Khoản Thu"]) || 0;
                 const chi = parseFloat(item["Khoản Chi"]) || 0;
                 balance += (thu - chi);
-                const dateStr = item["Ngày"] ? new Date(item["Ngày"]).toLocaleDateString('vi-VN') : '';
-                
-                html += `<tr class="border-b hover:bg-gray-50">
-                    <td class="p-3 border">${dateStr}</td>
-                    <td class="p-3 border font-medium">${item["Nội dung"]}</td>
-                    <td class="p-3 border">${item["Người thực hiện/Người đóng góp"]}</td>
-                    <td class="p-3 border text-right text-blue-600">${thu > 0 ? thu.toLocaleString() : '-'}</td>
-                    <td class="p-3 border text-right text-red-500">${chi > 0 ? chi.toLocaleString() : '-'}</td>
-                    <td class="p-3 border text-right font-bold text-emerald-700">${balance.toLocaleString()}</td>
-                    ${isAdmin ? `<td class="p-3 border text-center whitespace-nowrap">
-                        <button onclick="editRow('${encodeURIComponent(JSON.stringify(item))}')" class="text-blue-600 font-bold hover:underline mr-2">Sửa</button>
-                        <button onclick="deleteRow(${item.row})" class="text-red-600 font-bold hover:underline">Xóa</button>
-                    </td>` : ''}
-                </tr>`;
+                const d = item["Ngày"] ? new Date(item["Ngày"]).toLocaleDateString('vi-VN') : '-';
+                html += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-2 border text-center">${d}</td>
+                        <td class="p-2 border font-medium">${item["Nội dung"]}</td>
+                        <td class="p-2 border">${item["Người thực hiện/Người đóng góp"]}</td>
+                        <td class="p-2 border text-right text-blue-600">${thu > 0 ? thu.toLocaleString() : '-'}</td>
+                        <td class="p-2 border text-right text-red-500">${chi > 0 ? chi.toLocaleString() : '-'}</td>
+                        <td class="p-2 border text-right font-bold text-emerald-700">${balance.toLocaleString()}</td>
+                        ${isAdmin ? `<td class="p-2 border text-center no-print whitespace-nowrap">
+                            <button onclick="editRow('${encodeURIComponent(JSON.stringify(item))}')" class="text-blue-500 font-bold mr-2">Sửa</button>
+                            <button onclick="deleteRow(${item.row}, ${index})" class="text-red-500 font-bold">Xóa</button>
+                        </td>` : ''}
+                    </tr>`;
             });
             document.getElementById('data-table').innerHTML = html;
             document.getElementById('totalBalance').innerText = balance.toLocaleString() + " VNĐ";
         }
 
         async function saveData() {
-            if(!isAdmin) return alert("Vui lòng đăng nhập!");
+            if(!isAdmin) return;
+            const editRowId = document.getElementById('editRowId').value;
             const date = document.getElementById('date').value;
             const content = document.getElementById('content').value;
+            const person = document.getElementById('person').value;
             const amount = document.getElementById('amount').value;
             const type = document.getElementById('type').value;
-            const editRowId = document.getElementById('editRowId').value;
-            if(!date || !content || !amount) return alert("Vui lòng nhập đủ dữ liệu!");
 
-            const payload = {
-                action: editRowId ? "edit" : "add",
-                row: editRowId,
-                date: date,
-                content: content,
-                person: document.getElementById('person').value,
-                thu: type === 'thu' ? amount : "",
-                chi: type === 'chi' ? amount : ""
+            if(!date || !content || !amount) return alert("Vui lòng nhập đủ thông tin!");
+
+            const updatedItem = {
+                "row": editRowId,
+                "Ngày": date,
+                "Nội dung": content,
+                "Người thực hiện/Người đóng góp": person,
+                "Khoản Thu": type === 'thu' ? amount : "",
+                "Khoản Chi": type === 'chi' ? amount : ""
             };
 
-            setLoading(true);
-            await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            // OPTIMISTIC UI: Cập nhật bảng ngay lập tức
+            if (editRowId) {
+                const idx = localData.findIndex(i => i.row == editRowId);
+                if (idx > -1) localData[idx] = updatedItem;
+            } else {
+                localData.push(updatedItem);
+            }
+            renderTable();
+
+            // Gửi dữ liệu âm thầm
+            fetch(WEB_APP_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ 
+                    action: editRowId ? "edit" : "add", 
+                    ...updatedItem,
+                    date: updatedItem["Ngày"],
+                    content: updatedItem["Nội dung"],
+                    person: updatedItem["Người thực hiện/Người đóng góp"],
+                    thu: updatedItem["Khoản Thu"],
+                    chi: updatedItem["Khoản Chi"]
+                }) 
+            });
+
+            // TỰ ĐỘNG CLEAR DATA SAU KHI LƯU
             resetForm();
-            document.getElementById('date').value = "";
-            document.getElementById('person').value = "";
-            alert("Đã lưu! Đang tải lại...");
-            setTimeout(fetchData, 2000);
-            setLoading(false);
+            alert("Đã lưu thành công!");
         }
 
-        async function deleteRow(rowId) {
-            if (!confirm("Xóa dòng này?")) return;
-            setLoading(true);
-            await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "delete", row: rowId }) });
-            setTimeout(fetchData, 2000);
-            setLoading(false);
+        async function deleteRow(rowId, index) {
+            if (!confirm("Bạn có chắc chắn muốn xóa?")) return;
+            // Xóa ngay trên giao diện
+            localData.splice(index, 1);
+            renderTable();
+            // Gửi lệnh xóa ngầm
+            fetch(WEB_APP_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ action: "delete", row: rowId }) 
+            });
         }
 
-        function editRow(data) {
-            const item = JSON.parse(decodeURIComponent(data));
+        function editRow(encodedData) {
+            const item = JSON.parse(decodeURIComponent(encodedData));
+            document.getElementById('editRowId').value = item.row;
             if (item["Ngày"]) {
                 const d = new Date(item["Ngày"]);
                 document.getElementById('date').value = d.toISOString().split('T')[0];
             }
-            document.getElementById('editRowId').value = item.row;
             document.getElementById('content').value = item["Nội dung"];
             document.getElementById('person').value = item["Người thực hiện/Người đóng góp"];
             document.getElementById('amount').value = item["Khoản Thu"] || item["Khoản Chi"];
             document.getElementById('type').value = item["Khoản Thu"] ? "thu" : "chi";
-            document.getElementById('formTitle').innerText = "Sửa Giao Dịch (Dòng " + item.row + ")";
+            
+            document.getElementById('formTitle').innerText = "Sửa giao dịch dòng " + item.row;
             document.getElementById('cancelBtn').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('adminSection').scrollIntoView({ behavior: 'smooth' });
         }
 
         function resetForm() {
@@ -217,7 +221,20 @@
             document.getElementById('cancelBtn').classList.add('hidden');
         }
 
-        function setLoading(s) { document.getElementById('loading').classList.toggle('hidden', !s); }
+        function exportToPDF() {
+            const element = document.getElementById('capture-area');
+            html2pdf().from(element).set({ margin: 5, filename: 'Thu_Chi_Nha_Tho.pdf', image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } }).save();
+        }
+
+        async function updateFundOnSheet() {
+            const n = prompt("Tiền quỹ mới:", serverFund);
+            if (n) {
+                serverFund = parseFloat(n);
+                renderTable();
+                fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "updateFund", amount: serverFund }) });
+            }
+        }
+
         fetchData();
     </script>
 </body>
