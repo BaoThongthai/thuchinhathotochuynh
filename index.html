@@ -3,65 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sổ Thu Chi Nhà Thờ Tộc - Quản Trị Viên</title>
+    <title>Sổ Thu Chi Nhà Thờ Tộc - Trợ Lý Bảo Bảo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="bg-gray-100 p-2 md:p-8">
+    <!-- Lớp phủ trạng thái -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-40 z-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-xl flex items-center gap-3">
+            <i class="fas fa-spinner fa-spin text-emerald-600 text-2xl"></i>
+            <span class="font-bold text-gray-700">Đang xử lý dữ liệu...</span>
+        </div>
+    </div>
+
     <div id="capture-area" class="max-w-6xl mx-auto bg-white p-4 rounded-lg shadow-xl border-t-4 border-emerald-600">
-        <!-- Header -->
         <div class="flex justify-between items-center mb-6 border-b pb-4">
-            <h1 class="text-xl font-bold text-emerald-800 uppercase">Sổ Thu Chi Nhà Thờ Tộc</h1>
-            <button id="loginBtn" onclick="toggleLogin()" class="bg-gray-800 text-white px-4 py-2 rounded text-xs font-bold no-print">🔒 Đăng nhập</button>
+            <h1 class="text-xl font-bold text-emerald-800 uppercase italic">Sổ Thu Chi Nhà Thờ Tộc</h1>
+            <button id="loginBtn" onclick="toggleLogin()" class="bg-gray-800 text-white px-4 py-2 rounded text-xs font-bold no-print transition hover:bg-black">🔒 Đăng nhập</button>
         </div>
 
-        <!-- Form Nhập Liệu (Admin Only) -->
+        <!-- Form Nhập Liệu -->
         <div id="adminSection" class="bg-emerald-50 p-4 rounded-lg mb-6 hidden shadow-inner no-print border border-emerald-200">
             <h2 id="formTitle" class="font-bold text-emerald-700 mb-3 uppercase text-sm">Thêm Giao Dịch Mới</h2>
             <input type="hidden" id="editRowId" value="">
             <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
-                <input type="date" id="date" class="p-3 border rounded w-full">
-                <input type="text" id="content" placeholder="Nội dung" class="p-3 border rounded w-full md:col-span-2">
-                <input type="text" id="person" placeholder="Người thực hiện" class="p-3 border rounded w-full">
-                <input type="number" id="amount" placeholder="Số tiền" class="p-3 border rounded w-full font-bold text-emerald-700">
-                <select id="type" class="p-3 border rounded bg-white w-full font-bold">
-                    <option value="thu">Thu (+)</option>
-                    <option value="chi" selected>Chi (-)</option>
-                </select>
+                <div class="flex flex-col">
+                    <label class="text-[10px] font-bold text-emerald-600 ml-1 italic">Ngày:</label>
+                    <input type="date" id="date" class="p-3 border rounded w-full bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
+                </div>
+                <div class="flex flex-col md:col-span-2">
+                    <label class="text-[10px] font-bold text-emerald-600 ml-1 italic">Nội dung:</label>
+                    <input type="text" id="content" placeholder="Ví dụ: Tiền hương khói..." class="p-3 border rounded w-full bg-white focus:ring-2 focus:ring-emerald-400 outline-none">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[10px] font-bold text-emerald-600 ml-1 italic">Người thực hiện:</label>
+                    <input type="text" id="person" placeholder="Tên thành viên" class="p-3 border rounded w-full bg-white">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[10px] font-bold text-emerald-600 ml-1 italic">Số tiền:</label>
+                    <input type="number" id="amount" placeholder="VNĐ" class="p-3 border rounded w-full font-bold text-emerald-700 bg-white">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[10px] font-bold text-emerald-600 ml-1 italic">Loại:</label>
+                    <select id="type" class="p-3 border rounded bg-white w-full font-bold">
+                        <option value="thu">Thu (+)</option>
+                        <option value="chi" selected>Chi (-)</option>
+                    </select>
+                </div>
             </div>
             <div class="flex gap-2 mt-4">
-                <button onclick="saveData()" class="bg-emerald-600 text-white flex-1 py-3 rounded font-bold shadow hover:bg-emerald-700 transition">LƯU DỮ LIỆU</button>
-                <button id="cancelBtn" onclick="resetForm()" class="bg-gray-400 text-white px-6 py-3 rounded font-bold hidden">HỦY</button>
+                <button onclick="saveData()" class="bg-emerald-600 text-white flex-1 py-3 rounded font-bold shadow hover:bg-emerald-700 transition uppercase">Lưu Dữ Liệu</button>
+                <button id="cancelBtn" onclick="resetForm()" class="bg-gray-400 text-white px-6 py-3 rounded font-bold hidden hover:bg-gray-500">Hủy</button>
             </div>
         </div>
 
-        <!-- Toolbar & Stats -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <!-- Toolbar -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <div class="flex gap-2 no-print w-full md:w-auto">
-                <button onclick="fetchData()" class="bg-blue-600 text-white p-3 rounded shadow hover:bg-blue-700"><i class="fas fa-sync"></i></button>
-                <button onclick="exportToPDF()" class="bg-red-600 text-white p-3 rounded shadow hover:bg-red-700"><i class="fas fa-file-pdf"></i></button>
-                
-                <!-- NÚT DẪN ĐẾN GOOGLE SHEET (Chỉ hiện khi Login) -->
+                <button onclick="fetchData()" class="bg-blue-600 text-white p-3 rounded shadow hover:bg-blue-700 transition" title="Tải lại"><i class="fas fa-sync"></i></button>
+                <button onclick="exportToPDF()" class="bg-red-600 text-white p-3 rounded shadow hover:bg-red-700 transition" title="Xuất PDF"><i class="fas fa-file-pdf"></i></button>
                 <a id="sheetBtn" href="https://docs.google.com/spreadsheets/d/1Rqcw81ZWtNyoYoaPN1t-eJIJ5AIsQPLn_68M5RCo5PE/edit?gid=1344774832#gid=1344774832" target="_blank" 
-                   class="bg-green-600 text-white p-3 rounded shadow hover:bg-green-700 hidden items-center justify-center">
-                    <i class="fas fa-file-excel mr-2"></i> <span class="hidden md:inline">Mở Google Sheet</span>
+                   class="bg-green-600 text-white p-3 rounded shadow hover:bg-green-700 hidden items-center justify-center flex-1 md:flex-none">
+                    <i class="fas fa-file-excel mr-1"></i> <span class="text-xs font-bold uppercase">Bảng tính</span>
                 </a>
             </div>
             
-            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                <div class="border-2 border-red-500 bg-red-50 px-4 py-2 rounded-lg flex items-center justify-between min-w-[180px]">
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto font-mono">
+                <div class="border-2 border-red-500 bg-red-50 px-4 py-2 rounded-lg flex items-center justify-between min-w-[170px] shadow-sm">
                     <div class="flex flex-col">
-                        <span class="text-red-700 font-bold text-xs uppercase">Tiền quỹ (L1):</span>
-                        <span id="fundAmount" class="text-red-800 font-black text-lg">0</span>
+                        <span class="text-red-700 font-bold text-[10px] uppercase">Quỹ (L1):</span>
+                        <span id="fundAmount" class="text-red-800 font-black">0</span>
                     </div>
                     <button id="editFundBtn" onclick="updateFundOnSheet()" class="ml-3 text-gray-400 hidden no-print hover:text-red-600"><i class="fas fa-pen"></i></button>
                 </div>
-                
-                <div class="border-2 border-blue-500 bg-blue-50 px-4 py-2 rounded-lg flex items-center justify-between min-w-[180px]">
+                <div class="border-2 border-blue-500 bg-blue-50 px-4 py-2 rounded-lg flex items-center justify-between min-w-[170px] shadow-sm">
                     <div class="flex flex-col">
-                        <span class="text-blue-700 font-bold text-xs uppercase">Sổ tiết kiệm (L2):</span>
-                        <span id="savingsAmount" class="text-blue-800 font-black text-lg">0</span>
+                        <span class="text-blue-700 font-bold text-[10px] uppercase">Tiết kiệm (L2):</span>
+                        <span id="savingsAmount" class="text-blue-800 font-black">0</span>
                     </div>
                     <button id="editSavingsBtn" onclick="updateSavingsOnSheet()" class="ml-3 text-gray-400 hidden no-print hover:text-blue-600"><i class="fas fa-pen"></i></button>
                 </div>
@@ -69,7 +88,7 @@
         </div>
 
         <!-- Bảng Dữ Liệu -->
-        <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+        <div class="overflow-x-auto rounded-lg border shadow-sm">
             <table class="w-full text-[11px] md:text-sm border-collapse">
                 <thead>
                     <tr class="bg-emerald-700 text-white uppercase italic tracking-wider">
@@ -79,12 +98,12 @@
                         <th class="p-3 border text-right">Thu</th>
                         <th class="p-3 border text-right">Chi</th>
                         <th class="p-3 border text-right">Số Dư</th>
-                        <th id="thAdmin" class="p-3 border hidden no-print">Sửa/Xóa</th>
+                        <th id="thAdmin" class="p-3 border hidden no-print">Sửa</th>
                     </tr>
                 </thead>
                 <tbody id="data-table" class="bg-white"></tbody>
                 <tfoot>
-                    <tr class="bg-gray-100 font-black text-base border-t-2 border-emerald-800">
+                    <tr class="bg-gray-100 font-black border-t-2 border-emerald-800 text-base">
                         <td colspan="5" class="p-4 text-right">TỔNG SỐ DƯ QUỸ:</td>
                         <td id="totalBalance" class="p-4 text-right text-emerald-800 underline decoration-double">0 VNĐ</td>
                         <td id="tfAdmin" class="hidden no-print"></td>
@@ -95,25 +114,22 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwX8NSYLL6trjabxB_9ae-EV2j1oI-HNCq1i7FAuxuUmDty0a_9IBwRQvRCvhDldH1x/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyNL0V75-e49-BGEBn9sejkXDTttXwmXdDdqdd3z9bonE2j09_ACI_xvvdG7WMYZw8M/exec";
         let isAdmin = false; let serverFund = 0; let serverSavings = 0; let localData = [];
 
         function toggleLogin() {
-            const loginBtn = document.getElementById('loginBtn');
-            const sheetBtn = document.getElementById('sheetBtn');
-            
             if (isAdmin) {
                 isAdmin = false;
-                loginBtn.innerText = "🔒 Đăng nhập";
-                sheetBtn.style.display = "none";
+                document.getElementById('loginBtn').innerText = "🔒 Đăng nhập";
+                document.getElementById('sheetBtn').style.display = "none";
                 document.getElementById('adminSection').classList.add('hidden');
                 document.querySelectorAll('[id^="edit"]').forEach(el => el.classList.add('hidden'));
                 document.querySelectorAll('[id$="Admin"]').forEach(el => el.classList.add('hidden'));
             } else {
                 if (prompt("Mật khẩu quản trị:") === "11111") {
                     isAdmin = true;
-                    loginBtn.innerText = "🔓 Đăng xuất";
-                    sheetBtn.style.display = "flex";
+                    document.getElementById('loginBtn').innerText = "🔓 Đăng xuất";
+                    document.getElementById('sheetBtn').style.display = "flex";
                     document.getElementById('adminSection').classList.remove('hidden');
                     document.querySelectorAll('[id^="edit"]').forEach(el => el.classList.remove('hidden'));
                     document.querySelectorAll('[id$="Admin"]').forEach(el => el.classList.remove('hidden'));
@@ -143,19 +159,7 @@
                 const chi = parseFloat(item["Khoản Chi"]) || 0;
                 balance += (thu - chi);
                 const d = item["Ngày"] ? new Date(item["Ngày"]).toLocaleDateString('vi-VN') : '-';
-                html += `
-                    <tr class="border-b hover:bg-emerald-50 transition">
-                        <td class="p-2 border text-center">${d}</td>
-                        <td class="p-2 border font-medium">${item["Nội dung"]}</td>
-                        <td class="p-2 border">${item["Người thực hiện/Người đóng góp"]}</td>
-                        <td class="p-2 border text-right text-blue-600">${thu.toLocaleString() || '-'}</td>
-                        <td class="p-2 border text-right text-red-500">${chi.toLocaleString() || '-'}</td>
-                        <td class="p-2 border text-right font-bold text-emerald-800">${balance.toLocaleString()}</td>
-                        ${isAdmin ? `<td class="p-2 border text-center no-print whitespace-nowrap">
-                            <button onclick="editRow('${encodeURIComponent(JSON.stringify(item))}')" class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
-                            <button onclick="deleteRow(${item.row}, ${index})" class="text-red-500"><i class="fas fa-trash"></i></button>
-                        </td>` : ''}
-                    </tr>`;
+                html += `<tr class="border-b hover:bg-gray-50"><td class="p-2 border text-center">${d}</td><td class="p-2 border font-medium">${item["Nội dung"]}</td><td class="p-2 border">${item["Người thực hiện/Người đóng góp"]}</td><td class="p-2 border text-right text-blue-600">${thu.toLocaleString() || '-'}</td><td class="p-2 border text-right text-red-500">${chi.toLocaleString() || '-'}</td><td class="p-2 border text-right font-bold text-emerald-700">${balance.toLocaleString()}</td>${isAdmin ? `<td class="p-2 border text-center no-print whitespace-nowrap"><button onclick="editRow('${encodeURIComponent(JSON.stringify(item))}')" class="text-blue-500 font-bold mr-2"><i class="fas fa-edit"></i></button><button onclick="deleteRow(${item.row}, ${index})" class="text-red-500 font-bold"><i class="fas fa-trash"></i></button></td>` : ''}</tr>`;
             });
             document.getElementById('data-table').innerHTML = html;
             document.getElementById('totalBalance').innerText = balance.toLocaleString() + " VNĐ";
@@ -163,73 +167,69 @@
 
         async function saveData() {
             if(!isAdmin) return;
+            const overlay = document.getElementById('loadingOverlay');
             const editRowId = document.getElementById('editRowId').value;
+            const amountVal = document.getElementById('amount').value;
+            
+            if(!document.getElementById('date').value || !document.getElementById('content').value || !amountVal) {
+                alert("Vui lòng nhập đầy đủ Ngày, Nội dung và Số tiền!");
+                return;
+            }
+
             const newItem = {
                 "row": editRowId,
-                "Ngày": document.getElementById('date').value,
-                "Nội dung": document.getElementById('content').value,
-                "Người thực hiện/Người đóng góp": document.getElementById('person').value,
-                "Khoản Thu": document.getElementById('type').value === 'thu' ? document.getElementById('amount').value : "",
-                "Khoản Chi": document.getElementById('type').value === 'chi' ? document.getElementById('amount').value : ""
+                "date": document.getElementById('date').value,
+                "content": document.getElementById('content').value,
+                "person": document.getElementById('person').value,
+                "thu": document.getElementById('type').value === 'thu' ? amountVal : "",
+                "chi": document.getElementById('type').value === 'chi' ? amountVal : ""
             };
-            
-            if (editRowId) { const idx = localData.findIndex(i => i.row == editRowId); localData[idx] = newItem; } 
-            else { localData.push(newItem); }
-            renderTable();
 
-            fetch(WEB_APP_URL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify({ 
-                    action: editRowId ? "edit" : "add", 
-                    ...newItem,
-                    date: newItem["Ngày"],
-                    content: newItem["Nội dung"],
-                    person: newItem["Người thực hiện/Người đóng góp"],
-                    thu: newItem["Khoản Thu"],
-                    chi: newItem["Khoản Chi"]
-                }) 
-            });
+            overlay.classList.remove('hidden');
 
-            resetForm();
-            document.getElementById('content').value = "";
-            document.getElementById('amount').value = "";
-            alert("Đã ghi nhận!");
-        }
+            try {
+                await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify({ action: editRowId ? "edit" : "add", ...newItem }) 
+                });
 
-        async function updateSavingsOnSheet() {
-            const n = prompt("Số dư tiết kiệm mới (L2):", serverSavings);
-            if (n) {
-                serverSavings = parseFloat(n);
-                renderTable();
-                fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "updateSavings", amount: serverSavings }) });
-            }
-        }
-
-        async function updateFundOnSheet() {
-            const n = prompt("Số dư quỹ mới (L1):", serverFund);
-            if (n) {
-                serverFund = parseFloat(n);
-                renderTable();
-                fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "updateFund", amount: serverFund }) });
+                setTimeout(async () => {
+                    await fetchData();
+                    overlay.classList.add('hidden');
+                    resetForm();
+                    document.getElementById('content').value = "";
+                    document.getElementById('amount').value = "";
+                    alert("Đã ghi nhận thành công!");
+                }, 2000); // Chờ Google Sheets cập nhật ID
+            } catch (e) {
+                overlay.classList.add('hidden');
+                alert("Có lỗi xảy ra, vui lòng thử lại!");
             }
         }
 
         async function deleteRow(rowId, index) {
             if (!confirm("Xóa dòng này?")) return;
-            localData.splice(index, 1); renderTable();
-            fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "delete", row: rowId }) });
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "delete", row: rowId }) });
+            setTimeout(async () => {
+                await fetchData();
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }, 1000);
         }
 
         function editRow(encodedData) {
             const item = JSON.parse(decodeURIComponent(encodedData));
             document.getElementById('editRowId').value = item.row;
-            if (item["Ngày"]) document.getElementById('date').value = new Date(item["Ngày"]).toISOString().split('T')[0];
+            if (item["Ngày"]) {
+                const d = new Date(item["Ngày"]);
+                document.getElementById('date').value = d.toISOString().split('T')[0];
+            }
             document.getElementById('content').value = item["Nội dung"];
             document.getElementById('person').value = item["Người thực hiện/Người đóng góp"];
             document.getElementById('amount').value = item["Khoản Thu"] || item["Khoản Chi"];
             document.getElementById('type').value = item["Khoản Thu"] ? "thu" : "chi";
-            document.getElementById('formTitle').innerText = "Sửa dòng " + item.row;
+            document.getElementById('formTitle').innerText = "Sửa giao dịch dòng " + item.row;
             document.getElementById('cancelBtn').classList.remove('hidden');
             document.getElementById('adminSection').scrollIntoView({ behavior: 'smooth' });
         }
@@ -238,6 +238,24 @@
             document.getElementById('editRowId').value = "";
             document.getElementById('formTitle').innerText = "Thêm Giao Dịch Mới";
             document.getElementById('cancelBtn').classList.add('hidden');
+        }
+
+        async function updateSavingsOnSheet() {
+            const n = prompt("Số dư tiết kiệm mới (L2):", serverSavings);
+            if (n !== null) {
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "updateSavings", amount: parseFloat(n) }) });
+                setTimeout(() => { fetchData(); document.getElementById('loadingOverlay').classList.add('hidden'); }, 1500);
+            }
+        }
+
+        async function updateFundOnSheet() {
+            const n = prompt("Tiền quỹ mới (L1):", serverFund);
+            if (n !== null) {
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "updateFund", amount: parseFloat(n) }) });
+                setTimeout(() => { fetchData(); document.getElementById('loadingOverlay').classList.add('hidden'); }, 1500);
+            }
         }
 
         function exportToPDF() {
